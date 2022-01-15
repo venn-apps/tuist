@@ -9,6 +9,7 @@ import FirebaseDatabase
 import FirebaseFirestore
 import GoogleSignIn
 import UIKit
+import RealmSwift
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -44,6 +45,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Use GoogleSignIn to make sure it links fine
         _ = GIDConfiguration(clientID: "YOUR_IOS_CLIENT_ID")
+
+        // Use Realm to make sure it links fine
+        _ = try? Realm()
 
         return true
     }
