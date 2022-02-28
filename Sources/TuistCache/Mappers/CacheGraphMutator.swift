@@ -44,6 +44,7 @@ class CacheGraphMutator: CacheGraphMutating {
             precompiledArtifacts: precompiledArtifacts,
             graphTraverser: graphTraverser
         )
+        newGraph.dependencies = mapPrebuiltFrameworks(graph: newGraph)
         newGraph.targets = mapTargets(
             replaceableTargets: replaceableTargets,
             graphTraverser: graphTraverser
@@ -146,5 +147,29 @@ class CacheGraphMutator: CacheGraphMutating {
 
         // Target is replaceable, load the .framework or .xcframework or .bundle
         return try artifactLoader.load(path: precompiledArtifacts[target]!)
+    }
+
+    fileprivate func mapPrebuiltFrameworks(
+        graph: Graph
+    ) -> [GraphDependency: Set<GraphDependency>] {
+        var newGraphDependencies = graph.dependencies
+        let graphTraverser = GraphTraverser(graph: graph)
+        for (graphTarget, graphDependencies) in graph.dependencies {
+            guard let target = graphTraverser.target(from: graphTarget) else { continue }
+            guard target.target.product.runnable || target.target.product == .unitTests else { continue }
+
+            // For runnable targets (like apps) and unit tests targets we will map
+            // as direct dependencies all prebuild dependencies from their static dependencies.
+            var precompiledDependencies: Set<GraphDependency> = []
+            for dependency in graphDependencies {
+                guard let target = graphTraverser.target(from: dependency) else { continue }
+                guard target.target.product == .staticFramework else { continue }
+
+                let dependencyPrecompiledDependencies = graphTraverser.prebuiltDependencies(for: dependency)
+                precompiledDependencies.formUnion(dependencyPrecompiledDependencies)
+            }
+            newGraphDependencies[graphTarget, default: Set()].formUnion(precompiledDependencies)
+        }
+        return newGraphDependencies
     }
 }
