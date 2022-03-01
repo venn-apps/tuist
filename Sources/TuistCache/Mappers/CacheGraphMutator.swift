@@ -159,7 +159,7 @@ class CacheGraphMutator: CacheGraphMutating {
             guard target.target.product.runnable || target.target.product == .unitTests else { continue }
 
             // For runnable targets (like apps) and unit tests targets we will map
-            // as direct dependencies all prebuild dependencies from their static dependencies.
+            // as direct dependencies all prebuilt dependencies from their static dependencies.
             var precompiledDependencies: Set<GraphDependency> = []
             for dependency in graphDependencies {
                 guard let target = graphTraverser.target(from: dependency) else { continue }
